@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 260 33% 97%;
+    /* Soft Lavender White */
+    --foreground: 262 33% 18%;
+    /* Deep Dark Purple/Brown */
+
+    --card: 0 0% 100%;
+    --card-foreground: 262 33% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 262 33% 18%;
+
+    --primary: 341 63% 29%;
+    /* Deep Wine Red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 40% 94%;
+    /* Pale Lavender */
+    --secondary-foreground: 341 63% 29%;
+
+    --muted: 260 20% 96%;
+    --muted-foreground: 262 15% 45%;
+
+    --accent: 341 30% 90%;
+    /* Soft Rose/Wine Tint */
+    --accent-foreground: 341 63% 29%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 260 20% 90%;
+    --input: 260 20% 90%;
+    --ring: 341 63% 29%;
+
+    --radius: 0.75rem;
+
+    /* Semantic Theme Variables */
+    --bg-primary: #F5F0EE;
+    --bg-card: #FFFFFF;
+    --text-primary: #2A1F3D;
+    --text-secondary: #6B7280;
+    --accent-primary: #8B1535;
+    --accent-soft: #FFC0CB;
+    --border-color: #E2E8F0;
+
+    /* Custom PRISM colors reverted to contrast-focused theme */
+    --prism-cream: #F5F0EE;
+    --prism-wine: #7A1C3A;
+    --prism-crimson: #8B1535;
+    --prism-lavender: #E6E1F0;
+    --prism-deep: #2A1F3D;
+    --prism-gold: #D4AF37;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 100%;
+    --card: 240 10% 9%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 10% 9%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 341 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 341 83% 58%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 84%;
+    --accent: 341 83% 58%;
+    --accent-foreground: 341 83% 58%;
+    --border: 240 10% 18%;
+    --input: 240 10% 18%;
+    --ring: 341 83% 58%;
+
+    /* Semantic Theme Variables - Lunar Pink */
+    --bg-primary: #0f0f12;
+    --bg-card: #17171c;
+    --text-primary: #ffffff;
+    --text-secondary: #cfcfd6;
+    --accent-primary: #ffb6c1;
+    --accent-soft: #ffc0cb;
+    --border-color: #2a2a30;
+  }
+}
+
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @layer base {
+    * {
+      @apply border-border;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      @apply bg-background text-foreground antialiased;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: 'Playfair Display', serif;
+      letter-spacing: -0.01em;
+      font-weight: 600;
+    }
+
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+
+    .font-inter {
+      font-family: 'Inter', sans-serif;
+    }
+  }
+
+  @layer utilities {
+
+    /* Gradient backgrounds */
+    .bg-gradient-radial {
+      background: radial-gradient(circle at center, var(--tw-gradient-stops));
+    }
+
+
+    /* Custom scrollbar */
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Line clamp utilities */
+    .line-clamp-1 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      line-clamp: 1;
+      overflow: hidden;
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-clamp: 2;
+      overflow: hidden;
+    }
+
+    /* Animation utilities */
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    /* Hover lift effect */
+    .hover-lift {
+      @apply transition-transform duration-300;
+    }
+
+    .hover-lift:hover {
+      transform: translateY(-4px);
+    }
+
+    /* Text gradient - Deep Wine flavor */
+    .text-gradient {
+      @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60;
+    }
+
+    /* Shadow utilities */
+    .shadow-soft {
+      box-shadow: 0 8px 30px rgba(110, 90, 127, 0.08);
+    }
+
+    .shadow-medium {
+      box-shadow: 0 18px 50px rgba(110, 90, 127, 0.12);
+    }
+
+    .shadow-strong {
+      box-shadow: 0 25px 60px rgba(110, 90, 127, 0.18);
+    }
+
+  }
+
+  /* Custom selection color */
+  ::selection {
+    background: hsla(var(--primary), 0.2);
+    color: hsl(var(--primary));
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* Button hover transitions */
+  button,
+  a {
+    @apply transition-all duration-200;
+  }
+
+  /* Input focus styles */
+  input:focus,
+  textarea:focus {
+    @apply ring-2 ring-primary/20 border-primary/40;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+
+  .card-hover:hover {
+    @apply shadow-medium;
+    transform: translateY(-2px);
+  }
+}
