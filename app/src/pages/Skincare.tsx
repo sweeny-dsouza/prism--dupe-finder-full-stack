@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, Beaker, FlaskConical, TrendingDown, Star, Heart, Check, ShoppingBag } from 'lucide-react';
+import { Sparkles, Beaker, FlaskConical, TrendingDown, Star, Heart, Check, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { products, ingredients, skinConcerns } from '@/data/products';
+import { useProducts, useIngredients, useConcerns } from '@/hooks/useApi';
 import { formatPrice, searchIngredients, generateRoutine } from '@/lib/utils';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
 import SafeImage from '@/components/ui/SafeImage';
 import type { Ingredient } from '@/types';
 
-const skincareProducts = products.filter(p => p.category === 'skincare');
-
 export default function Skincare() {
+  const { products: skincareProducts, loading: productsLoading } = useProducts('skincare');
+  const { ingredients } = useIngredients();
+  const { concerns: skinConcerns } = useConcerns('skin');
+
   const [ingredientQuery, setIngredientQuery] = useState('');
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [routineGoal, setRoutineGoal] = useState('');
@@ -36,7 +38,7 @@ export default function Skincare() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300"
+      className={`min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300 ${productsLoading ? 'opacity-50' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20">
         {/* Luxury Hero Section */}

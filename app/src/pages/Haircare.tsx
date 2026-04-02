@@ -4,25 +4,26 @@ import { Link } from 'react-router-dom';
 import { Wind, Star, Heart, Droplets, Zap, Shield, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { products, hairConcerns } from '@/data/products';
+import { useProducts, useConcerns } from '@/hooks/useApi';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
 import { formatPrice } from '@/lib/utils';
 import SafeImage from '@/components/ui/SafeImage';
 
-const haircareProducts = products.filter(p => p.category === 'haircare');
-
-const hairTypes = [
-  { id: 'straight', name: 'Straight', icon: '━', description: 'Smooth, sleek hair that falls flat' },
-  { id: 'wavy', name: 'Wavy', icon: '∿', description: 'Loose S-shaped waves' },
-  { id: 'curly', name: 'Curly', icon: '⦿', description: 'Defined curls with bounce' },
-  { id: 'coily', name: 'Coily', icon: '◎', description: 'Tight coils and kinks' },
-];
-
 export default function Haircare() {
+  const { products: haircareProducts, loading: productsLoading } = useProducts('haircare');
+  const { concerns: hairConcerns } = useConcerns('hair');
+
   const [selectedHairType, setSelectedHairType] = useState<string | null>(null);
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();
+
+  const hairTypes = [
+    { id: 'straight', name: 'Straight', icon: '━', description: 'Smooth, sleek hair that falls flat' },
+    { id: 'wavy', name: 'Wavy', icon: '∿', description: 'Loose S-shaped waves' },
+    { id: 'curly', name: 'Curly', icon: '⦿', description: 'Defined curls with bounce' },
+    { id: 'coily', name: 'Coily', icon: '◎', description: 'Tight coils and kinks' },
+  ];
 
   const filteredProducts = haircareProducts.filter(product => {
     if (selectedHairType && !product.hairType?.includes(selectedHairType)) return false;
@@ -38,7 +39,7 @@ export default function Haircare() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300"
+      className={`min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300 ${productsLoading ? 'opacity-50' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20">
         {/* Luxury Hero Section */}

@@ -3,22 +3,24 @@ import { Link } from 'react-router-dom';
 import { Heart, ArrowRight, Trash2, Sparkles, Star, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { products } from '@/data/products';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
+import { useProducts } from '@/hooks/useApi';
 import { formatPrice } from '@/lib/utils';
 import SafeImage from '@/components/ui/SafeImage';
 
 export default function Saved() {
+  const { products: allProducts, loading } = useProducts();
   const { savedProducts, toggleSaved, clearSaved } = useSavedProducts();
   const { addToCart } = useCart();
-  const savedProductsData = products.filter(p => savedProducts.includes(p.id));
+  
+  const savedProductsData = allProducts.filter(p => savedProducts.includes(p.id));
 
   return (
     <motion.main
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300"
+      className={`min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300 ${loading ? 'opacity-50' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20">
         {/* Header */}

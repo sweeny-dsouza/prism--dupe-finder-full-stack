@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Check, Sparkles, TrendingDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { products } from '@/data/products';
-import { compareProducts, searchProducts, formatPrice } from '@/lib/utils';
+import { compareProducts, formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
 import SafeImage from '@/components/ui/SafeImage';
 
@@ -15,8 +14,38 @@ export default function Compare() {
   const [showSearchA, setShowSearchA] = useState(false);
   const [showSearchB, setShowSearchB] = useState(false);
 
-  const searchResultsA = searchA ? searchProducts(products, searchA).slice(0, 5) : [];
-  const searchResultsB = searchB ? searchProducts(products, searchB).slice(0, 5) : [];
+  const [searchResultsA, setSearchResultsA] = useState<Product[]>([]);
+  const [searchResultsB, setSearchResultsB] = useState<Product[]>([]);
+
+  const handleSearchA = async (query: string) => {
+    setSearchA(query);
+    if (query.length > 2) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const data = await response.json();
+        setSearchResultsA(data.slice(0, 5));
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      setSearchResultsA([]);
+    }
+  };
+
+  const handleSearchB = async (query: string) => {
+    setSearchB(query);
+    if (query.length > 2) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const data = await response.json();
+        setSearchResultsB(data.slice(0, 5));
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      setSearchResultsB([]);
+    }
+  };
 
   const comparison = productA && productB ? compareProducts(productA, productB) : null;
 
@@ -93,7 +122,7 @@ export default function Compare() {
                       placeholder="Search premium product..."
                       value={searchA}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        setSearchA(e.target.value);
+                        handleSearchA(e.target.value);
                         setShowSearchA(true);
                         setShowSearchB(false);
                       }}
@@ -164,7 +193,7 @@ export default function Compare() {
                       placeholder="Search premium product..."
                       value={searchB}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        setSearchB(e.target.value);
+                        handleSearchB(e.target.value);
                         setShowSearchB(true);
                         setShowSearchA(false);
                       }}

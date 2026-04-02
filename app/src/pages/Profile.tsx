@@ -5,13 +5,15 @@ import { User, Mail, Heart, Search, LogOut, Edit2, Check, Sparkles, ChevronRight
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser, useSavedProducts, useRecentSearches } from '@/hooks/useLocalStorage';
-import { products } from '@/data/products';
+import { useProducts } from '@/hooks/useApi';
 import { toast } from 'sonner';
 
 export default function Profile() {
   const { user, logout, updateUser } = useUser();
   const { savedProducts, clearSaved } = useSavedProducts();
   const { recentSearches, clearSearches } = useRecentSearches();
+  const { products: allProducts } = useProducts();
+  
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
@@ -35,7 +37,7 @@ export default function Profile() {
     );
   }
 
-  const savedProductsData = products.filter(p => savedProducts.includes(p.id));
+  const savedProductsData = allProducts.filter(p => savedProducts.includes(p.id));
 
   const handleSaveProfile = () => {
     updateUser({ name: editName });

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server/database:/usr/src/app/database
+    environment:
+      - PORT=5000
+      - CORS_ORIGIN=http://localhost
+
+  frontend:
+    build: ./app
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

@@ -5,9 +5,9 @@ import { X, TrendingDown, Star, Heart, Sparkles, ShoppingBag, ChevronRight } fro
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
-import { products } from '@/data/products';
-import { calculateDupeMatches, searchProducts, formatPrice } from '@/lib/utils';
+import { calculateDupeMatches, formatPrice } from '@/lib/utils';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
+import { useProducts } from '@/hooks/useApi';
 import SafeImage from '@/components/ui/SafeImage';
 import type { Product, DupeMatch } from '@/types';
 
@@ -21,6 +21,7 @@ const priceRanges = [
 ];
 
 export default function DupeFinder() {
+  const { products, loading: productsLoading } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -39,16 +40,24 @@ export default function DupeFinder() {
     }
   }, []);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     if (query.trim()) {
-      const results = searchProducts(products, query);
-      if (results.length > 0) {
-        setSelectedProduct(results[0]);
-        const matches = calculateDupeMatches(results[0], products, 10);
-        setDupeMatches(matches);
-      } else {
-        setSelectedProduct(null);
-        setDupeMatches([]);
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const results = await response.json();
+        if (results.length > 0) {
+          const product = results[0];
+          setSelectedProduct(product);
+          // Calculate matches against the full backend list would be better
+          // For now, we use the already fetched 'products' if it's available
+          const matches = calculateDupeMatches(product, products, 10);
+          setDupeMatches(matches);
+        } else {
+          setSelectedProduct(null);
+          setDupeMatches([]);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
   };
@@ -56,6 +65,7 @@ export default function DupeFinder() {
 
 
   const filteredProducts = useMemo(() => {
+    if (!products) return [];
     let filtered = products;
 
     if (selectedCategory !== 'All') {
@@ -67,7 +77,7 @@ export default function DupeFinder() {
     );
 
     return filtered;
-  }, [selectedCategory, selectedPriceRange]);
+  }, [products, selectedCategory, selectedPriceRange]);
 
 
   return (
@@ -75,7 +85,7 @@ export default function DupeFinder() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300"
+      className={`min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300 ${productsLoading ? 'opacity-50' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20">
         {/* Luxury Hero Section */}
@@ -374,7 +384,7 @@ export default function DupeFinder() {
 
             {/* Premium Product Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.slice(0, 12).map((product, index) => (
+              {filteredProducts.slice(0, 12).map((product: Product, index: number) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}

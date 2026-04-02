@@ -3,14 +3,11 @@ import { Link } from 'react-router-dom';
 import { Droplets, ArrowRight, Star, Heart, Sparkles, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { SafeImage } from '@/components/ui/SafeImage';
-import { products } from '@/data/products';
-import { bodyConcerns } from '@/data/bodyConcerns';
+import SafeImage from '@/components/ui/SafeImage';
+import { useProducts, useConcerns } from '@/hooks/useApi';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
 import { formatPrice } from '@/lib/utils';
 import { useState } from 'react';
-
-const bodycareProducts = products.filter(p => p.category === 'bodycare');
 
 const routineSteps = [
   {
@@ -40,12 +37,22 @@ const routineSteps = [
 ];
 
 export default function Bodycare() {
+  const { products: bodycareProducts, loading: productsLoading } = useProducts('bodycare');
+  const { concerns: bodyConcerns, loading: concernsLoading } = useConcerns('body');
+  
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedConcernId, setSelectedConcernId] = useState(bodyConcerns[0].id);
+  const [selectedConcernId, setSelectedConcernId] = useState<string | null>(null);
 
-  const selectedConcern = bodyConcerns.find(c => c.id === selectedConcernId);
+  // Initialize selectedConcernId once data is loaded
+  useState(() => {
+    if (bodyConcerns.length > 0 && !selectedConcernId) {
+        setSelectedConcernId(bodyConcerns[0].id);
+    }
+  });
+
+  const selectedConcern: any = bodyConcerns.find(c => c.id === (selectedConcernId || (bodyConcerns[0]?.id)));
 
   const getStepProducts = (stepId: string) => {
     if (stepId === 'exfoliate') {
@@ -53,7 +60,8 @@ export default function Bodycare() {
     }
     if (stepId === 'treat') {
       if (!selectedConcern) return [];
-      return bodycareProducts.filter(p => selectedConcern.recommendedProductIds.includes(p.id));
+      const recommendedIds = JSON.parse(selectedConcern.recommendedProductIds || '[]');
+      return bodycareProducts.filter(p => recommendedIds.includes(p.id));
     }
     if (stepId === 'seal') {
       return bodycareProducts.filter(p => p.bodyRoutineStep === 'seal' || p.subcategory === 'body moisturizer' || p.subcategory === 'body oil');
@@ -66,7 +74,7 @@ export default function Bodycare() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300"
+      className={`min-h-screen pt-24 pb-16 bg-background dark:bg-[#0f0f12] text-foreground dark:text-white transition-colors duration-300 ${productsLoading ? 'opacity-50' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20">
         {/* Luxury Hero Section */}
@@ -119,9 +127,9 @@ export default function Bodycare() {
               <div className="absolute top-[28px] left-0 right-0 h-[2px] bg-primary/5 -z-10 mx-16 hidden sm:block" />
               {routineSteps.map((step, index) => (
                 <button
-                  key={step.id}
-                  onClick={() => setActiveStep(index)}
-                  className="flex flex-col items-center gap-4 relative group"
+                   key={step.id}
+                   onClick={() => setActiveStep(index)}
+                   className="flex flex-col items-center gap-4 relative group"
                 >
                   <div className={`w-14 h-14 rounded-2xl transition-all duration-500 flex items-center justify-center text-2xl shadow-lg border-2 ${activeStep === index
                     ? `bg-primary text-white border-primary scale-110 shadow-medium`
@@ -197,7 +205,7 @@ export default function Bodycare() {
                                 Formulation Insight
                               </h4>
                               <p className="text-base text-foreground dark:text-white mb-4 italic transition-colors">
-                                "{selectedConcern.explanation}"
+                                "{selectedConcern.description}"
                               </p>
                             </motion.div>
                           )}
@@ -256,22 +264,6 @@ export default function Bodycare() {
                               <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shrink-0">
                                 <ArrowRight className="w-4 h-4" />
                               </div>
-                              <Button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  addToCart(product);
-                                  toast.success("Item added to cart", {
-                                    description: `${product.name} by ${product.brand}`,
-                                    action: {
-                                      label: "View Cart",
-                                      onClick: () => window.location.href = '/cart'
-                                    }
-                                  });
-                                }}
-                                className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:shadow-lg transition-all shrink-0"
-                              >
-                                <ShoppingBag className="w-4 h-4" />
-                              </Button>
                             </Link>
                           </motion.div>
                         ))}
@@ -286,10 +278,10 @@ export default function Bodycare() {
 
         {/* All Products */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-24"
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.4 }}
+           className="mb-24"
         >
           <div className="flex items-center justify-between mb-10 border-b border-primary/5 dark:border-white/10 pb-6 transition-colors">
             <h2 className="text-2xl font-bold text-foreground dark:text-white transition-colors">Body Archive</h2>
@@ -348,17 +340,6 @@ export default function Bodycare() {
                         {product.name}
                       </h3>
                     </Link>
-
-                    {/* Concern tags */}
-                    {product.concerns && product.concerns.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {product.concerns.slice(0, 3).map((c) => (
-                          <span key={c} className="text-[9px] font-bold px-2.5 py-1 rounded-full border border-primary/15 dark:border-white/10 text-primary/60 dark:text-[#ffb6c1]/60 uppercase tracking-widest bg-primary/5 dark:bg-white/5">
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Rating */}
                     <div className="flex items-center gap-1.5 mb-4">

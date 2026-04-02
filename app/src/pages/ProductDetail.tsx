@@ -4,9 +4,9 @@ import { ArrowLeft, Heart, Star, TrendingDown, Check, Sparkles, ShoppingBag } fr
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { products } from '@/data/products';
 import { calculateDupeMatches, getBudgetLabel, getBudgetColor, formatPrice } from '@/lib/utils';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
+import { useProduct, useProducts } from '@/hooks/useApi';
 import SafeImage from '@/components/ui/SafeImage';
 
 export default function ProductDetail() {
@@ -14,25 +14,28 @@ export default function ProductDetail() {
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();
 
-  const product = products.find(p => p.id === id);
+  const { product, loading: productLoading } = useProduct(id);
+  const { products: allProducts } = useProducts(product?.category as any);
 
-  if (!product) {
+  if (productLoading || !product) {
     return (
-      <main className="min-h-screen pt-24 pb-16 bg-background flex items-center justify-center">
+      <main className={`min-h-screen pt-24 pb-16 bg-background flex items-center justify-center ${productLoading ? 'opacity-50' : ''}`}>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
-          <Link to="/dupe-finder">
-            <Button className="rounded-xl bg-primary text-white hover:opacity-90">
-              Browse Products
-            </Button>
-          </Link>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{productLoading ? 'Syncing...' : 'Product Not Found'}</h1>
+          <p className="text-muted-foreground mb-6">{productLoading ? 'Fetching from our molecular database...' : "The product you're looking for doesn't exist."}</p>
+          {!productLoading && (
+            <Link to="/dupe-finder">
+                <Button className="rounded-xl bg-primary text-white hover:opacity-90">
+                Browse Products
+                </Button>
+            </Link>
+          )}
         </div>
       </main>
     );
   }
 
-  const dupeMatches = calculateDupeMatches(product, products, 5);
+  const dupeMatches = allProducts && allProducts.length > 0 ? calculateDupeMatches(product, allProducts, 5) : [];
   const savings = product.originalPrice ? product.originalPrice - product.price : 0;
 
   return (

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, MapPin, Phone, Mail, User, ShieldCheck, ArrowRight, ChevronLeft } from 'lucide-react';
+import { CreditCard, MapPin, Phone, Mail, User, ShieldCheck, ArrowRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart, useOrders } from '@/hooks/useLocalStorage';
+import { createOrder } from '@/hooks/useApi';
 import { formatPrice } from '@/lib/utils';
 import type { Order } from '@/types';
+import { toast } from 'sonner';
 
 export default function Checkout() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -27,8 +29,11 @@ export default function Checkout() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     // Create new order
     const orderId = `PRISM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -41,9 +46,20 @@ export default function Checkout() {
       customerDetails: formData
     };
 
-    addOrder(newOrder);
-    clearCart();
-    navigate(`/order-confirmed/${orderId}`);
+    try {
+        // Sync with backend
+        await createOrder(newOrder);
+        
+        // Also save to local storage for profile view
+        addOrder(newOrder);
+        clearCart();
+        toast.success("Order placed successfully!");
+        navigate(`/order-confirmed/${orderId}`);
+    } catch (err) {
+        toast.error("Failed to place order. Please try again.");
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -151,10 +167,11 @@ export default function Checkout() {
 
               <Button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full rounded-2xl bg-primary dark:bg-[#ffb6c1] text-white dark:text-[#8B1535] py-8 hover-lift shadow-medium text-lg font-bold group"
               >
-                Place Order
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Place Order'}
+                {!isSubmitting && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
               </Button>
             </form>
           </div>
