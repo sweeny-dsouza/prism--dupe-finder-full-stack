@@ -38,7 +38,7 @@ const routineSteps = [
 
 export default function Bodycare() {
   const { products: bodycareProducts, loading: productsLoading } = useProducts('bodycare');
-  const { concerns: bodyConcerns, loading: concernsLoading } = useConcerns('body');
+  const { concerns: bodyConcerns } = useConcerns('body');
   
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();

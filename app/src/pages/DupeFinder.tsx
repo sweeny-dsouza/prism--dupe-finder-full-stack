@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import SearchAutocomplete from '@/components/SearchAutocomplete';
 import { calculateDupeMatches, formatPrice } from '@/lib/utils';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
-import { useProducts } from '@/hooks/useApi';
+import { useProducts, API_BASE_URL } from '@/hooks/useApi';
 import SafeImage from '@/components/ui/SafeImage';
 import type { Product, DupeMatch } from '@/types';
 
@@ -43,7 +43,7 @@ export default function DupeFinder() {
   const handleSearch = async (query: string) => {
     if (query.trim()) {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
         const results = await response.json();
         if (results.length > 0) {
           const product = results[0];

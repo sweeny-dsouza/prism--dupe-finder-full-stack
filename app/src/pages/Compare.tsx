@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { compareProducts, formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
 import SafeImage from '@/components/ui/SafeImage';
+import { API_BASE_URL } from '@/hooks/useApi';
 
 export default function Compare() {
   const [productA, setProductA] = useState<Product | null>(null);
@@ -21,7 +22,7 @@ export default function Compare() {
     setSearchA(query);
     if (query.length > 2) {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
         const data = await response.json();
         setSearchResultsA(data.slice(0, 5));
       } catch (err) {
@@ -36,7 +37,7 @@ export default function Compare() {
     setSearchB(query);
     if (query.length > 2) {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/search?q=${query}`);
+        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
         const data = await response.json();
         setSearchResultsB(data.slice(0, 5));
       } catch (err) {
