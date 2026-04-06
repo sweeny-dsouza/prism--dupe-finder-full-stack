@@ -39,7 +39,12 @@ const routineSteps = [
 export default function Bodycare() {
   const { products: bodycareProducts, loading: productsLoading } = useProducts('bodycare');
   const { concerns: bodyConcerns } = useConcerns('body');
-  
+
+  if (!bodyConcerns || bodyConcerns.length === 0) {
+    return <div>Loading...</div>;
+  }
+
+
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();
   const [activeStep, setActiveStep] = useState(0);
@@ -48,7 +53,7 @@ export default function Bodycare() {
   // Initialize selectedConcernId once data is loaded
   useState(() => {
     if (bodyConcerns.length > 0 && !selectedConcernId) {
-        setSelectedConcernId(bodyConcerns[0].id);
+      setSelectedConcernId(bodyConcerns[0].id);
     }
   });
 
@@ -127,9 +132,9 @@ export default function Bodycare() {
               <div className="absolute top-[28px] left-0 right-0 h-[2px] bg-primary/5 -z-10 mx-16 hidden sm:block" />
               {routineSteps.map((step, index) => (
                 <button
-                   key={step.id}
-                   onClick={() => setActiveStep(index)}
-                   className="flex flex-col items-center gap-4 relative group"
+                  key={step.id}
+                  onClick={() => setActiveStep(index)}
+                  className="flex flex-col items-center gap-4 relative group"
                 >
                   <div className={`w-14 h-14 rounded-2xl transition-all duration-500 flex items-center justify-center text-2xl shadow-lg border-2 ${activeStep === index
                     ? `bg-primary text-white border-primary scale-110 shadow-medium`
@@ -278,10 +283,10 @@ export default function Bodycare() {
 
         {/* All Products */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.4 }}
-           className="mb-24"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-24"
         >
           <div className="flex items-center justify-between mb-10 border-b border-primary/5 dark:border-white/10 pb-6 transition-colors">
             <h2 className="text-2xl font-bold text-foreground dark:text-white transition-colors">Body Archive</h2>
