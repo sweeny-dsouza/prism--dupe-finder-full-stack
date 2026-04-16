@@ -43,21 +43,39 @@ export default function DupeFinder() {
   const handleSearch = async (query: string) => {
     if (query.trim()) {
       try {
-        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
+        // Fix: Use the correct endpoint and parameter name
+        const response = await fetch(`${API_BASE_URL}/products?search=${query}`);
         const results = await response.json();
-        if (results.length > 0) {
+        
+        if (results && results.length > 0) {
           const product = results[0];
           setSelectedProduct(product);
-          // Calculate matches against the full backend list would be better
-          // For now, we use the already fetched 'products' if it's available
+          // If we found a specific product, we should ideally show its category
+          // to make the results consistent with the UI filters
+          if (product.category) {
+            const displayCategory = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+            if (categories.includes(displayCategory)) {
+              setSelectedCategory(displayCategory);
+            } else {
+              setSelectedCategory('All');
+            }
+          }
+          
+          // Calculate matches against the full backend list
           const matches = calculateDupeMatches(product, products, 10);
           setDupeMatches(matches);
         } else {
           setSelectedProduct(null);
           setDupeMatches([]);
+          toast.error("Product not found", {
+            description: "Try searching for another premium brand or product."
+          });
         }
       } catch (err) {
-        console.error(err);
+        console.error("Search error:", err);
+        toast.error("Search failed", {
+          description: "There was a problem connecting to our matching engine."
+        });
       }
     }
   };
@@ -383,140 +401,148 @@ export default function DupeFinder() {
             </div>
 
             {/* Premium Product Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.slice(0, 12).map((product: Product, index: number) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group"
-                >
-                  <div className="bg-white dark:bg-[#17171c] rounded-[1.5rem] overflow-hidden border border-primary/10 dark:border-white/10 shadow-soft hover:shadow-[0_20px_60px_rgba(122,28,58,0.14)] hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredProducts.slice(0, 12).map((product: Product, index: number) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group"
+                  >
+                    <div className="bg-white dark:bg-[#17171c] rounded-[1.5rem] overflow-hidden border border-primary/10 dark:border-white/10 shadow-soft hover:shadow-[0_20px_60px_rgba(122,28,58,0.14)] hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
 
-                    {/* Image Container — square aspect */}
-                    <div className="relative aspect-square bg-gradient-to-br from-[#fdf8f5] to-[#f5eff4] dark:from-[#1a1a21] dark:to-[#17171c] overflow-hidden">
-                      {/* Hover glow overlay */}
-                      <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+                      {/* Image Container — square aspect */}
+                      <div className="relative aspect-square bg-gradient-to-br from-[#fdf8f5] to-[#f5eff4] dark:from-[#1a1a21] dark:to-[#17171c] overflow-hidden">
+                        {/* Hover glow overlay */}
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
 
-                      <SafeImage
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-contain p-5 group-hover:scale-108 transition-transform duration-700 ease-out z-0"
-                        fallbackCategory={product.category as any}
-                      />
+                        <SafeImage
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-5 group-hover:scale-108 transition-transform duration-700 ease-out z-0"
+                          fallbackCategory={product.category as any}
+                        />
 
-                      {/* Discount badge */}
-                      {(product as any).originalPrice && (
-                        <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                          Save {Math.round(((product as any).originalPrice - product.price) / (product as any).originalPrice * 100)}%
-                        </div>
-                      )}
+                        {/* Discount badge */}
+                        {(product as any).originalPrice && (
+                          <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                            Save {Math.round(((product as any).originalPrice - product.price) / (product as any).originalPrice * 100)}%
+                          </div>
+                        )}
 
-                      {/* Wishlist button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSaved(product.id);
-                        }}
-                        className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/90 dark:bg-[#17171c]/90 backdrop-blur-sm border border-primary/10 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-all duration-200 shadow-sm"
-                      >
-                        <Heart className={`w-4 h-4 transition-colors ${isSaved(product.id) ? 'fill-primary text-primary' : 'text-primary/40'}`} />
-                      </button>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-5 flex flex-col flex-1">
-                      {/* Brand */}
-                      <p className="text-[10px] font-bold text-primary/50 dark:text-[#ffb6c1]/50 uppercase tracking-[0.2em] mb-1.5">{product.brand}</p>
-
-                      {/* Product name */}
-                      <h4
-                        className="font-bold text-[15px] text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-[#ffb6c1] transition-colors leading-snug mb-3 line-clamp-2 cursor-pointer"
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          const matches = calculateDupeMatches(product, products, 10);
-                          setDupeMatches(matches);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                      >
-                        {product.name}
-                      </h4>
-
-                      {/* Hair type tags */}
-                      {(product as any).hairType && (product as any).hairType.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {(product as any).hairType.slice(0, 3).map((ht: string) => (
-                            <span
-                              key={ht}
-                              className="text-[9px] font-bold px-2.5 py-1 rounded-full border border-primary/15 dark:border-white/10 text-primary/60 dark:text-[#ffb6c1]/60 uppercase tracking-widest bg-primary/5 dark:bg-white/5"
-                            >
-                              {ht}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1.5 mb-4">
-                        <div className="flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? 'fill-primary text-primary dark:fill-[#ffb6c1] dark:text-[#ffb6c1]' : 'text-primary/10 dark:text-white/10'} transition-colors`} />
-                          ))}
-                        </div>
-                        <span className="text-xs font-bold text-primary/50 dark:text-[#ffb6c1]/50 leading-none">{product.rating}</span>
-                      </div>
-
-                      {/* Spacer */}
-                      <div className="flex-1" />
-
-                      {/* Price + CTA */}
-                      <div className="border-t border-primary/5 dark:border-white/5 pt-4 space-y-3">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xl font-bold text-foreground dark:text-white">{formatPrice(product.price)}</span>
-                          {(product as any).originalPrice && (
-                            <span className="text-xs text-muted-foreground/40 line-through">{formatPrice((product as any).originalPrice)}</span>
-                          )}
-                        </div>
-
-                        {/* Add to Cart button */}
-                        <Button
+                        {/* Wishlist button */}
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToCart(product);
-                            toast.success("Item added to cart", {
-                              description: `${product.name} by ${product.brand}`,
-                              action: {
-                                label: "View Cart",
-                                onClick: () => window.location.href = '/cart'
-                              }
-                            });
+                            toggleSaved(product.id);
                           }}
-                          className="w-full rounded-2xl bg-primary dark:bg-[#ffb6c1] text-white dark:text-[#8B1535] py-5 hover:opacity-90 hover:shadow-lg transition-all font-bold text-sm flex items-center justify-center gap-2 group/btn"
+                          className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/90 dark:bg-[#17171c]/90 backdrop-blur-sm border border-primary/10 dark:border-white/10 flex items-center justify-center hover:scale-110 transition-all duration-200 shadow-sm"
                         >
-                          <ShoppingBag className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                          Add to Cart
-                        </Button>
+                          <Heart className={`w-4 h-4 transition-colors ${isSaved(product.id) ? 'fill-primary text-primary' : 'text-primary/40'}`} />
+                        </button>
+                      </div>
 
-                        {/* Find dupes link */}
-                        <button
+                      {/* Product Info */}
+                      <div className="p-5 flex flex-col flex-1">
+                        {/* Brand */}
+                        <p className="text-[10px] font-bold text-primary/50 dark:text-[#ffb6c1]/50 uppercase tracking-[0.2em] mb-1.5">{product.brand}</p>
+
+                        {/* Product name */}
+                        <h4
+                          className="font-bold text-[15px] text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-[#ffb6c1] transition-colors leading-snug mb-3 line-clamp-2 cursor-pointer"
                           onClick={() => {
                             setSelectedProduct(product);
                             const matches = calculateDupeMatches(product, products, 10);
                             setDupeMatches(matches);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className="w-full flex items-center justify-center gap-1 text-[11px] font-bold text-primary/50 dark:text-[#ffb6c1]/50 hover:text-primary dark:hover:text-[#ffb6c1] transition-colors uppercase tracking-wider py-1"
                         >
-                          Find Dupes
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
+                          {product.name}
+                        </h4>
+
+                        {/* Hair type tags */}
+                        {(product as any).hairType && (product as any).hairType.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {(product as any).hairType.slice(0, 3).map((ht: string) => (
+                              <span
+                                key={ht}
+                                className="text-[9px] font-bold px-2.5 py-1 rounded-full border border-primary/15 dark:border-white/10 text-primary/60 dark:text-[#ffb6c1]/60 uppercase tracking-widest bg-primary/5 dark:bg-white/5"
+                              >
+                                {ht}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Rating */}
+                        <div className="flex items-center gap-1.5 mb-4">
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? 'fill-primary text-primary dark:fill-[#ffb6c1] dark:text-[#ffb6c1]' : 'text-primary/10 dark:text-white/10'} transition-colors`} />
+                            ))}
+                          </div>
+                          <span className="text-xs font-bold text-primary/50 dark:text-[#ffb6c1]/50 leading-none">{product.rating}</span>
+                        </div>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
+                        {/* Price + CTA */}
+                        <div className="border-t border-primary/5 dark:border-white/5 pt-4 space-y-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl font-bold text-foreground dark:text-white">{formatPrice(product.price)}</span>
+                            {(product as any).originalPrice && (
+                              <span className="text-xs text-muted-foreground/40 line-through">{formatPrice((product as any).originalPrice)}</span>
+                            )}
+                          </div>
+
+                          {/* Add to Cart button */}
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                              toast.success("Item added to cart", {
+                                description: `${product.name} by ${product.brand}`,
+                                action: {
+                                  label: "View Cart",
+                                  onClick: () => window.location.href = '/cart'
+                                }
+                              });
+                            }}
+                            className="w-full rounded-2xl bg-primary dark:bg-[#ffb6c1] text-white dark:text-[#8B1535] py-5 hover:opacity-90 hover:shadow-lg transition-all font-bold text-sm flex items-center justify-center gap-2 group/btn"
+                          >
+                            <ShoppingBag className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                            Add to Cart
+                          </Button>
+
+                          {/* Find dupes link */}
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product);
+                              const matches = calculateDupeMatches(product, products, 10);
+                              setDupeMatches(matches);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="w-full flex items-center justify-center gap-1 text-[11px] font-bold text-primary/50 dark:text-[#ffb6c1]/50 hover:text-primary dark:hover:text-[#ffb6c1] transition-colors uppercase tracking-wider py-1"
+                          >
+                            Find Dupes
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-24 bg-white dark:bg-[#17171c] rounded-[3rem] border border-primary/10 dark:border-white/10">
+                <Sparkles className="w-12 h-12 text-primary/20 mx-auto mb-6" />
+                <p className="text-xl font-bold text-foreground dark:text-white pb-1">No products found for this selection.</p>
+                <p className="text-muted-foreground dark:text-gray-400 leading-relaxed">Try adjusting your category or price filters.</p>
+              </div>
+            )}
 
             {filteredProducts.length > 12 && (
               <div className="mt-16 text-center">

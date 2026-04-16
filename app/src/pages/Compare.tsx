@@ -22,7 +22,7 @@ export default function Compare() {
     setSearchA(query);
     if (query.length > 2) {
       try {
-        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
+        const response = await fetch(`${API_BASE_URL}/products?search=${query}`);
         const data = await response.json();
         setSearchResultsA(data.slice(0, 5));
       } catch (err) {
@@ -37,7 +37,7 @@ export default function Compare() {
     setSearchB(query);
     if (query.length > 2) {
       try {
-        const response = await fetch(`${API_BASE_URL}/products/search?q=${query}`);
+        const response = await fetch(`${API_BASE_URL}/products?search=${query}`);
         const data = await response.json();
         setSearchResultsB(data.slice(0, 5));
       } catch (err) {

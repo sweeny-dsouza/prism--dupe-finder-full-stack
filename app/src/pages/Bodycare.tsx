@@ -7,7 +7,7 @@ import SafeImage from '@/components/ui/SafeImage';
 import { useProducts, useConcerns } from '@/hooks/useApi';
 import { useSavedProducts, useCart } from '@/hooks/useLocalStorage';
 import { formatPrice } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const routineSteps = [
   {
@@ -39,23 +39,28 @@ const routineSteps = [
 export default function Bodycare() {
   const { products: bodycareProducts, loading: productsLoading } = useProducts('bodycare');
   const { concerns: bodyConcerns } = useConcerns('body');
-
-  if (!bodyConcerns || bodyConcerns.length === 0) {
-    return <div>Loading...</div>;
-  }
-
-
   const { toggleSaved, isSaved } = useSavedProducts();
   const { addToCart } = useCart();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedConcernId, setSelectedConcernId] = useState<string | null>(null);
 
   // Initialize selectedConcernId once data is loaded
-  useState(() => {
-    if (bodyConcerns.length > 0 && !selectedConcernId) {
+  useEffect(() => {
+    if (bodyConcerns && bodyConcerns.length > 0 && !selectedConcernId) {
       setSelectedConcernId(bodyConcerns[0].id);
     }
-  });
+  }, [bodyConcerns, selectedConcernId]);
+
+  if (!bodyConcerns || bodyConcerns.length === 0) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center bg-background dark:bg-[#0f0f12]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground font-medium animate-pulse">Designing your sanctuary...</p>
+        </div>
+      </div>
+    );
+  }
 
   const selectedConcern: any = bodyConcerns.find(c => c.id === (selectedConcernId || (bodyConcerns[0]?.id)));
 
@@ -65,7 +70,9 @@ export default function Bodycare() {
     }
     if (stepId === 'treat') {
       if (!selectedConcern) return [];
-      const recommendedIds = JSON.parse(selectedConcern.recommendedProductIds || '[]');
+      const recommendedIds = Array.isArray(selectedConcern.recommendedProductIds) 
+        ? selectedConcern.recommendedProductIds 
+        : JSON.parse(selectedConcern.recommendedProductIds || '[]');
       return bodycareProducts.filter(p => recommendedIds.includes(p.id));
     }
     if (stepId === 'seal') {

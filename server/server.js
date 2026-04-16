@@ -57,7 +57,8 @@ app.get('/api/products', (req, res) => {
       benefits: JSON.parse(row.benefits || '[]'),
       concerns: JSON.parse(row.concerns || '[]'),
       tags: JSON.parse(row.tags || '[]'),
-      keyIngredients: JSON.parse(row.keyIngredients || '[]')
+      keyIngredients: JSON.parse(row.keyIngredients || '[]'),
+      hairType: JSON.parse(row.hairType || '[]')
     }));
     res.json(products);
   });
@@ -78,7 +79,8 @@ app.get('/api/products/:id', (req, res) => {
       benefits: JSON.parse(row.benefits || '[]'),
       concerns: JSON.parse(row.concerns || '[]'),
       tags: JSON.parse(row.tags || '[]'),
-      keyIngredients: JSON.parse(row.keyIngredients || '[]')
+      keyIngredients: JSON.parse(row.keyIngredients || '[]'),
+      hairType: JSON.parse(row.hairType || '[]')
     };
     res.json(product);
   });
@@ -115,7 +117,8 @@ app.get('/api/concerns', (req, res) => {
     const concerns = rows.map(row => ({
       ...row,
       recommendedIngredients: JSON.parse(row.recommendedIngredients || '[]'),
-      avoidIngredients: JSON.parse(row.avoidIngredients || '[]')
+      avoidIngredients: JSON.parse(row.avoidIngredients || '[]'),
+      recommendedProductIds: JSON.parse(row.recommendedProductIds || '[]')
     }));
     res.json(concerns);
   });

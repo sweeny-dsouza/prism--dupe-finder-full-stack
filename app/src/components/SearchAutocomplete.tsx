@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search } from 'lucide-react';
-import { products } from '@/data/products';
+import { API_BASE_URL } from '@/hooks/useApi';
 import type { Product } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import SafeImage from '@/components/ui/SafeImage';
@@ -45,17 +45,26 @@ export default function SearchAutocomplete({
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (query.length > 1) {
-            const filtered = products.filter(p =>
-                p.name.toLowerCase().includes(query.toLowerCase()) ||
-                p.brand.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, 5);
-            setSuggestions(filtered);
-            setIsOpen(true);
-        } else {
-            setSuggestions([]);
-            setIsOpen(false);
-        }
+        const fetchSuggestions = async () => {
+            if (query.length > 1) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/products?search=${query}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setSuggestions(data.slice(0, 5));
+                        setIsOpen(true);
+                    }
+                } catch (err) {
+                    console.error('Error fetching suggestions:', err);
+                }
+            } else {
+                setSuggestions([]);
+                setIsOpen(false);
+            }
+        };
+
+        const timer = setTimeout(fetchSuggestions, 300);
+        return () => clearTimeout(timer);
     }, [query]);
 
     useEffect(() => {

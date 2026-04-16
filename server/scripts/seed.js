@@ -76,7 +76,8 @@ const extractArray = (content, variableName) => {
         return null;
     }
     
-    const startIndex = content.indexOf('[', varIndex);
+    const equalsIndex = content.indexOf('=', varIndex);
+    const startIndex = content.indexOf('[', equalsIndex !== -1 ? equalsIndex : varIndex);
     if (startIndex === -1) {
         console.warn(`Opening bracket for ${variableName} not found`);
         return null;
@@ -104,7 +105,7 @@ const extractArray = (content, variableName) => {
     try {
         // Remove trailing comma if it exists before ] to satisfy some environments
         // and remove comments
-        const cleanStr = arrayStr.replace(/\/\/.*$/gm, '').replace(/,\s*\]$/, ']');
+        const cleanStr = arrayStr.replace(/(^|[^:])\/\/.*$/gm, '$1').replace(/,\s*\]$/, ']');
         return new Function(`return ${cleanStr}`)();
     } catch (e) {
         console.error(`Error parsing ${variableName}:`, e.message);
